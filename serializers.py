@@ -1,7 +1,7 @@
 import messages as msg
 import pickle
-import json
 import csv
+import json
 
 
 class Serializers:
@@ -28,7 +28,7 @@ class Serializers:
 
     def _save_json(self, file, data, **kwargs):
         with open(file, 'wt') as f:
-            return json.dump(data, f)
+            return json.dump(data, f, **kwargs)
 
     def _load_pickle(self, file=None, **kwargs):
         if file is None:
@@ -38,7 +38,7 @@ class Serializers:
 
     def _save_pickle(self, file, data, **kwargs):
         with open(file, 'wb') as f:
-            return pickle.dump(data, f)
+            return pickle.dump(data, f, **kwargs)
 
     def _load_csv(self, file=None, **kwargs):
         if file is None:
@@ -56,8 +56,8 @@ class Serializers:
             for name, value in data.items():
                 writer.writerow([name, value])
 
-    def load(self, file):
+    def load(self, file, **kwargs):
         pass
 
-    def save(self, file, data):
+    def save(self, file, data, **kwargs):
         pass

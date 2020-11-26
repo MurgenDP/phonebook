@@ -1,7 +1,8 @@
 import configparser
 import phonebook as ph
 import messages as msg
-import menu
+import menu as m
+import contact as cn
 
 config = configparser.ConfigParser()
 config.read(".\\phonebook.conf")
@@ -12,40 +13,137 @@ PHONEBOOK_DATA_PICKLE = 'phonebook.pickle'
 PHONEBOOK_DATA_CSV = 'phonebook.csv'
 
 
-# def menu_print():
-#     """Печать меню"""
-#     print(2 * '\n')
-#     for menu_key, menu_val in MENU_STR.items():
-#         print(f'{menu_key} - {menu_val["description"]}')
-
-
-# def menu_input_action():
-#     """Выбор пункта меню.
-#         В случае если введенный символ не соответствует ни одному из пунктов, то возвращается None
-#     """
-#     menu_print()
-#     input_str = input('\nВыберите действие: ').strip().upper()
-#     if input_str not in MENU_STR:
-#         raise KeyError(msg.MSG_INCORRECT_INPUT)
-#     return input_str
-
-
-def input_name():
-    """Ввод и проверка имени абонента
-        В случае некорректного имени возвращается None
-    """
-    _input_name = input('Введите имя: ')
-    if not _input_name.isalpha():
+def input_name(text=None):
+    if text:
+        name = input(text)
+    else:
+        name = input('Input name: ')
+    if not name.isalpha():
         raise KeyError(msg.MSG_INCORRECT_NAME)
-    return _input_name
-#
-# def contact_input_number():
-#     input_number = input('Введите телефон: ')
-#     if not input_number.isnumeric():
-#         raise KeyError(msg.MSG_INCORRECT_PHONE)
-#     return input_number
+    return name
+
+
+def input_number(text=None):
+    if text:
+        number = input(text)
+    else:
+        number = input('Input phone number: ')
+    if not number.isnumeric():
+        raise KeyError(msg.MSG_INCORRECT_PHONE)
+    return number
+
+
+def input_email(text=None):
+    if text:
+        email = input(text)
+    else:
+        email = input('Input email: ')
+    if not email.isalpha():
+        raise KeyError(msg.MSG_INCORRECT_EMAIL)
+    return email
+
+
+def add_contact(book, **kwargs):
+    name = input_name()
+    phone = input_number()
+    email = input_email()
+    contact = cn.Contact(name=name, phone=phone, email=email)
+    book.add_contact(contact)
+
+
+def add_phonenumber(book, **kwargs):
+    name = input_name().upper()
+    contact = book.get(name)
+    if contact:
+        phone = input_number()
+        contact.add_phone(phone)
+        book.update_contact(name, contact)
+
+
+def add_email(book, **kwargs):
+    name = input_name().upper()
+    contact = book.get(name)
+    if contact:
+        email = input_email()
+        contact.add_email(email)
+        book.update_contact(name, contact)
+
+
+def delete_contact(book, **kwargs):
+    name = input_name().upper()
+    book.delete_contact(name)
+
+
+def delete_phonenumber(book, **kwargs):
+    name = input_name().upper()
+    if name not in book:
+        raise KeyError(msg.MSG_CONTACT_NOT_EXISTS)
+    number = input_number()
+    book[name].delete_phone(number)
+
+
+def delete_email(book, **kwargs):
+    name = input_name().upper()
+    if name not in book:
+        raise KeyError(msg.MSG_CONTACT_NOT_EXISTS)
+    email = input_email()
+    book[name].delete_email(email)
+
+
+def update_phonenumber(book, **kwargs):
+    name = input_name().upper()
+    if name not in book:
+        raise KeyError(msg.MSG_CONTACT_NOT_EXISTS)
+    number_old = input_number('Input old number: ')
+    number_new = input_number('Input new number: ')
+    book[name].update_phone(number_old, number_new)
+
+
+def update_email(book, **kwargs):
+    name = input_name().upper()
+    if name not in book:
+        raise KeyError(msg.MSG_CONTACT_NOT_EXISTS)
+    email_old = input_email('Input old email: ')
+    email_new = input_email('Input new email: ')
+    book[name].update_email(email_old, email_new)
+
+
+def find(book, **kwargs):
+    name = input_name().upper()
+    if name not in book:
+        raise KeyError(msg.MSG_CONTACT_NOT_EXISTS)
+    print(book.find(name).show())
+
+
+def view_all(book, **kwargs):
+    for key, contact in book.items():
+        print(key, contact.show())
+
+
+def load_data(book, **kwargs):
+    if 'filename' not in kwargs:
+        raise KeyError(msg.MSG_INCORRECT_FILE_NAME)
+    filename = kwargs['filename']
+    book.load_data(file=filename)
+
+
+def save_data(book, **kwargs):
+    if 'filename' not in kwargs:
+        raise KeyError(msg.MSG_INCORRECT_FILE_NAME)
+    filename = kwargs['filename']
+    book.save_data(file=filename)
+
+
+def exit_(book, **kwargs):
+    exit()
+
+
+def dummy(book, **kwargs):
+    pass
+
 
 print(FORMAT_PHONEBOOK)
+
 
 filename = ''
 if FORMAT_PHONEBOOK == 'JSON':
@@ -59,55 +157,51 @@ else:
 
 
 book = ph.PhoneBook(FORMAT_PHONEBOOK)
-book.load_data(filename)
 
+menu = m.Menu()
+menu.add_item('1', 'Add')
+menu.add_item('2', 'Find', find)
+menu.add_item('3', 'Update')
+menu.add_item('4', 'Delete')
+menu.add_item('5', 'View all', view_all)
+menu.add_item('6', 'Load data', load_data)
+menu.add_item('7', 'Save data', save_data)
+menu.add_item('Q', 'Quit', exit_)
 
-# MENU_STR = {
-#     '1': {'description': 'Создать запись', 'action': phonebook_new_item},
-#     '2': {'description': 'Найти по имени', 'action': phonebook_find_item},
-#     '3': {'description': 'Изменить номер', 'action': phonebook_update_item},
-#     '4': {'description': 'Удалить абонента', 'action': phonebook_delete_item},
-#     '5': {'description': 'Просмотр справочника', 'action': phonebook_print_all},
-#     'Q': {'description': 'Выход', 'action': exit_},
-# }
+menu.items['1']['menu'] = m.Menu()
+menu.items['1']['menu'].add_item('1', 'Contact', add_contact)
+menu.items['1']['menu'].add_item('2', 'Phone', add_phonenumber)
+menu.items['1']['menu'].add_item('3', 'Email', add_email)
+menu.items['1']['menu'].add_item('4', 'Return', dummy)
 
-menu = menu.Menu()
-menu.add_item('1', 'Add', book.add)
-menu.add_item('2', 'Find', book.find)
-menu.add_item('3', 'Update', book.update)
-menu.add_item('4', 'Delete', book.delete)
-menu.add_item('5', 'View all', book.view_all)
-menu.add_item('6', 'Load data', book.load_data)
-menu.add_item('7', 'Save data', book.save_data)
-menu.add_item('Q', 'Quit', exit)
+menu.items['3']['menu'] = m.Menu()
+menu.items['3']['menu'].add_item('1', 'Phone', update_phonenumber)
+menu.items['3']['menu'].add_item('2', 'Email', update_email)
+menu.items['3']['menu'].add_item('3', 'Return', dummy)
+
+menu.items['4']['menu'] = m.Menu()
+menu.items['4']['menu'].add_item('1', 'Contact', delete_contact)
+menu.items['4']['menu'].add_item('2', 'Phone', delete_phonenumber)
+menu.items['4']['menu'].add_item('3', 'Email', delete_email)
+menu.items['4']['menu'].add_item('4', 'Return', dummy)
+
 
 while True:
     try:
         menu.show()
         choice = menu.input_choice()
-        contact_name = ''
-        contact_number = ''
-        if choice not in ('Q', '5', '6', '7'):
-            contact_name = input_name()
-            if choice in ('1', '3'):
-                contact_number = input('Input phone number: ')
 
-        if choice == '1':
-            book.add(contact_name, contact_number)
-        elif choice == '2':
-            book.find(contact_name)
-        elif choice == '3':
-            book.update(contact_name, contact_number)
-        elif choice == '4':
-            book.delete(contact_name)
-        elif choice == '5':
-            book.view_all()
-        elif choice == '6':
-            book.load_data(filename)
-        elif choice == '7':
-            book.save_data(filename)
-        elif choice == 'Q':
-            exit()
+        if choice not in menu.items:
+            continue
+        submenu = menu.items[choice].get('menu', None)
+        if submenu is None:
+            action = menu.get_action(choice)
+        else:
+            submenu.show()
+            choice_1 = submenu.input_choice()
+            action = submenu.get_action(choice_1)
+
+        action(book, filename=filename)
 
     except KeyError as e:
         print(e)
