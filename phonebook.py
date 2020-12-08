@@ -5,19 +5,6 @@ import json
 from contact import Contact
 
 
-def check_phonenumber(number):
-    if not number.isnumeric():
-        raise KeyError(msg.MSG_INCORRECT_PHONE)
-    return number
-
-
-def check_email(email):
-    if not email:
-        raise KeyError(msg.MSG_INCORRECT_EMAIL)
-    return email
-
-
-
 class PhoneBook:
     """
     phonebook = {
@@ -35,9 +22,14 @@ class PhoneBook:
     def __iter__(self):
         for key in self._phonebook:
             yield key
+        #iter(self._phonebook)
 
     def __getitem__(self, key):
         return self._phonebook[key]
+
+    def __setstate__(self, state):
+        print('__setstate__: ', state)
+        self.__dict__ = state
 
     def items(self):
         for key, value in self._phonebook.items():
